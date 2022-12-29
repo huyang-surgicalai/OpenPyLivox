@@ -165,7 +165,7 @@ class _dataCaptureThread(object):
                 if selectTest[0]:
                     data_pc, addr = self.d_socket.recvfrom(1500)
                     version = int.from_bytes(data_pc[0:1], byteorder='little')
-                    self.dataType = int.from_bytes(data_pc[9:10], byteorder='little')
+                    self.dataType = int.from_bytes(data_pc[9:10], byteorder='little')-2
                     timestamp_type = int.from_bytes(data_pc[8:9], byteorder='little')
                     timestamp1 = self.getTimestamp(data_pc[10:18], timestamp_type)
                     self.updateStatus(data_pc[4:8])
@@ -224,6 +224,8 @@ class _dataCaptureThread(object):
 
                 timestamp_sec = self.startTime
                 # main loop that captures the desired point cloud data
+                # print(self.firmwareType)
+                # print(self.dataType)
                 while True:
                     if self.started:
                         timeSinceStart = timestamp_sec - self.startTime
@@ -258,19 +260,21 @@ class _dataCaptureThread(object):
                                         for i in range(0, 100):
                                             # X coordinate
                                             coord1 = data_pc[bytePos:bytePos + 4]
-                                            bytePos += 4
-
+                                            # bytePos += 4
+                                            # print(bytePos)
+                                            # print(int.from_bytes(coord1,byteorder='little',signed=True))    
                                             # Y coordinate
-                                            coord2 = data_pc[bytePos:bytePos + 4]
-                                            bytePos += 4
-
+                                            coord2 = data_pc[bytePos+4:bytePos + 8]
+                                            # bytePos += 4
+                                            # print(bytePos)
+                                            # print(int.from_bytes(coord2,byteorder='little',signed=True))
                                             # Z coordinate
-                                            coord3 = data_pc[bytePos:bytePos + 4]
-                                            bytePos += 4
-
+                                            coord3 = data_pc[bytePos+8:bytePos + 12]
+                                            # bytePos += 4
+                                            # print(int.from_bytes(coord3,byteorder='little',signed=True))
                                             # intensity
-                                            intensity = data_pc[bytePos:bytePos + 1]
-                                            bytePos += 1
+                                            intensity = data_pc[bytePos+12:bytePos + 13]
+                                            # bytePos += 1
 
                                             # timestamp
                                             timestamp_sec += 0.00001
@@ -282,11 +286,17 @@ class _dataCaptureThread(object):
                                             coord1s.append(coord1)
                                             coord2s.append(coord2)
                                             coord3s.append(coord3)
+                                            # lenData = len(coord1s)
+                                            # for i in range(0, lenData):
+                                            #     coord11 = round(float(struct.unpack('<i', coord1s[i])[0]) / 1000.0, 3)
+                                            #     coord21 = round(float(struct.unpack('<i', coord2s[i])[0]) / 1000.0, 3)
+                                            #     coord31 = round(float(struct.unpack('<i', coord3s[i])[0]) / 1000.0, 3)
+                                            # print('xyz',coord11,coord21,coord31)
                                             intensities.append(intensity)
 
                                     # Spherical Coordinate System
                                     elif self.dataType == 1:
-                                        for i in range(0, 100):
+                                        for i in range(0, 10):
                                             # distance
                                             coord1 = data_pc[bytePos:bytePos + 4]
                                             bytePos += 4
@@ -311,6 +321,7 @@ class _dataCaptureThread(object):
                                             slot_ids.append(slot_id)
                                             lidar_ids.append(lidar_id)
                                             coord1s.append(coord1)
+                                            # print(int.from_bytes(coord1,byteorder='little',signed=True))
                                             coord2s.append(coord2)
                                             coord3s.append(coord3)
                                             intensities.append(intensity)
@@ -489,7 +500,7 @@ class _dataCaptureThread(object):
                     # thread still running check (exit point)
                     else:
                         break
-
+                # print('333',coord1s)
                 # make sure some data was captured
                 lenData = len(coord1s)
                 if lenData > 0:
@@ -518,10 +529,10 @@ class _dataCaptureThread(object):
                                 if coord1 or coord2 or coord3:
                                     numPts += 1
                                     csvFile.write("{0:.3f}".format(coord1) \
-                                                  + "," + "{0:.3f}".format(coord2) \
-                                                  + "," + "{0:.3f}".format(coord3) \
-                                                  + "," + str(int.from_bytes(intensities[i], byteorder='little')) \
-                                                  + "," + "{0:.6f}".format(timestamps[i]) + "\n")
+                                                  + " , " + "{0:.3f}".format(coord2) \
+                                                  + " , " + "{0:.3f}".format(coord3) \
+                                                  + " , " + str(int.from_bytes(intensities[i], byteorder='little')) \
+                                                  + " , " + "{0:.6f}".format(timestamps[i]) + "\n")
                                 else:
                                     nullPts += 1
 
@@ -535,10 +546,10 @@ class _dataCaptureThread(object):
                                 if coord1:
                                     numPts += 1
                                     csvFile.write("{0:.3f}".format(coord1) \
-                                                  + "," + "{0:.2f}".format(coord2) \
-                                                  + "," + "{0:.2f}".format(coord3) \
-                                                  + "," + str(int.from_bytes(intensities[i], byteorder='little')) \
-                                                  + "," + "{0:.6f}".format(timestamps[i]) + "\n")
+                                                  + " , " + "{0:.2f}".format(coord2) \
+                                                  + " , " + "{0:.2f}".format(coord3) \
+                                                  + " , " + str(int.from_bytes(intensities[i], byteorder='little')) \
+                                                  + " , " + "{0:.6f}".format(timestamps[i]) + "\n")
                                 else:
                                     nullPts += 1
 
@@ -611,7 +622,7 @@ class _dataCaptureThread(object):
                 if selectTest[0]:
                     data_pc, addr = self.d_socket.recvfrom(1500)
                     version = int.from_bytes(data_pc[0:1], byteorder='little')
-                    self.dataType = int.from_bytes(data_pc[9:10], byteorder='little')
+                    self.dataType = int.from_bytes(data_pc[9:10], byteorder='little')-2
                     timestamp_type = int.from_bytes(data_pc[8:9], byteorder='little')
                     timestamp1 = self.getTimestamp(data_pc[10:18], timestamp_type)
                     self.updateStatus(data_pc[4:8])
@@ -964,42 +975,50 @@ class _dataCaptureThread(object):
                 if self._showMessages: print("   " + self.sensorIP + self._format_spaces + "   -->     Incorrect lidar packet version")
 
     def run_realtime_bin(self):
-
+        # data_pc, addr = self.i_socket.recvfrom(1500)
+        # print('33',data_pc)
         # read point cloud data packet to get packet version and datatype
         # keep looping to 'consume' data that we don't want included in the captured point cloud data
-
+        # print('101',[self.i_socket])
+        # print('111',select.select([self.i_socket], [], [], 0)[0])
         breakByCapture = False
-
+        # print('222',self.duration)
         #used to check if the sensor is a Mid-100
         deviceCheck = 0
         try:
             deviceCheck = int(self._deviceType[4:7])
         except:
             pass
-
+        # print('1445',self.firmwareType)
+        # print('222',self.duration)
         while True:
 
             if self.started:
                 selectTest = select.select([self.d_socket], [], [], 0)
+                # print('222',selectTest[0])
                 if selectTest[0]:
+                    # print('222',self.duration)
                     data_pc, addr = self.d_socket.recvfrom(1500)
                     version = int.from_bytes(data_pc[0:1], byteorder='little')
                     self.dataType = int.from_bytes(data_pc[9:10], byteorder='little')
                     timestamp_type = int.from_bytes(data_pc[8:9], byteorder='little')
                     timestamp1 = self.getTimestamp(data_pc[10:18], timestamp_type)
                     self.updateStatus(data_pc[4:8])
+                    # print('222',self.duration)
                     if self.isCapturing:
                         self.startTime = timestamp1
                         breakByCapture = True
                         break
             else:
                 break
-
+        # print('111',select.select([self.d_socket], [], [], 0)[0])
+        # print('1445',self.firmwareType)
+        # print('222',self.duration)
         if breakByCapture:
 
             # check data packet is as expected (first byte anyways)
             if version == 5:
-
+                
                 # delayed start to capturing data check (secsToWait parameter)
                 timestamp2 = self.startTime
                 while True:
@@ -1007,11 +1026,13 @@ class _dataCaptureThread(object):
                         timeSinceStart = timestamp2 - self.startTime
                         if timeSinceStart <= self.secsToWait:
                             # read data from receive buffer and keep 'consuming' it
+                            # print('111',select.select([self.d_socket], [], [], 0)[0])
                             if select.select([self.d_socket], [], [], 0)[0]:
                                 data_pc, addr = self.d_socket.recvfrom(1500)
                                 timestamp_type = int.from_bytes(data_pc[8:9], byteorder='little')
                                 timestamp2 = self.getTimestamp(data_pc[10:18], timestamp_type)
                                 self.updateStatus(data_pc[4:8])
+                            # print('101',select.select([self.i_socket], [], [], 0)[0])
                             if select.select([self.i_socket], [], [], 0)[0]:
                                 imu_data, addr2 = self.i_socket.recvfrom(50)
                         else:
@@ -1019,13 +1040,15 @@ class _dataCaptureThread(object):
                             break
                     else:
                         break
-
+                # print('111',select.select([self.d_socket], [], [], 0)[0])
                 if self._showMessages: print("   " + self.sensorIP + self._format_spaces + "   -->     CAPTURING DATA...")
-
+                # print('111',select.select([self.d_socket], [], [], 0)[0])
                 timestamp_sec = self.startTime
-
+                # print('111',select.select([self.d_socket], [], [], 0)[0])
+                # print('122',self._showMessages)
                 if self._showMessages: print(
                     "   " + self.sensorIP + self._format_spaces + "   -->     writing real-time data to BINARY file: " + self.filePathAndName)
+                # print('111',select.select([self.i_socket], [], [], 0)[0])
                 binFile = open(self.filePathAndName, "wb")
                 IMU_file = None
 
@@ -1033,29 +1056,36 @@ class _dataCaptureThread(object):
                 numPts = 0
                 nullPts = 0
                 imu_records = 0
-
+                # print('1445',self.firmwareType)
                 # write header info to know how to parse the data later
                 binFile.write(str.encode("OPENPYLIVOX"))
                 binFile.write(struct.pack('<h', self.firmwareType))
                 binFile.write(struct.pack('<h', self.dataType))
-
+                # print('145',self.firmwareType)
+                # print(63)
+                # print('111',select.select([self.d_socket], [], [], 0)[0])
                 # main loop that captures the desired point cloud data
+                # data_pc, addr = self.i_socket.recvfrom(15)
+                # print('555',int.from_bytes(data_pc, byteorder='little'))
                 while True:
                     if self.started:
                         timeSinceStart = timestamp_sec - self.startTime
-
+                        # print('56', timeSinceStart)
+                        # print('59', self.duration)
                         if timeSinceStart <= self.duration:
 
                             # read points from data buffer
+                            # print('111',select.select([self.d_socket], [], [], 0)[0])
+                            # print('101',select.select([self.i_socket], [], [], 0)[0])
                             if select.select([self.d_socket], [], [], 0)[0]:
                                 data_pc, addr = self.d_socket.recvfrom(1500)
-
+                                # print('1454',data_pc)
                                 # version = int.from_bytes(data_pc[0:1], byteorder='little')
                                 # slot_id = int.from_bytes(data_pc[1:2], byteorder='little')
                                 # lidar_id = int.from_bytes(data_pc[2:3], byteorder='little')
 
                                 # byte 3 is reserved
-
+                                # print(123)
                                 # update lidar status information
                                 self.updateStatus(data_pc[4:8])
                                 dataType = int.from_bytes(data_pc[9:10], byteorder='little')
@@ -1063,9 +1093,9 @@ class _dataCaptureThread(object):
                                 timestamp_sec = self.getTimestamp(data_pc[10:18], timestamp_type)
 
                                 bytePos = 18
-
                                 # single return firmware (relevant for Mid-40 and Mid-100)
                                 # Horizon and Tele-15 sensors also fall under this 'if' statement
+                                # print('1445',dataType)
                                 if self.firmwareType == 1:
 
                                     # Cartesian Coordinate System
@@ -1120,24 +1150,35 @@ class _dataCaptureThread(object):
                                     # Horizon and Tele-15 Cartesian (single return)
                                     elif dataType == 2:
                                         # to account for first point's timestamp being increment in the loop
+                                        # print('2',timestamp_sec)
+                                        d1=[]
                                         timestamp_sec -= 0.000004167
                                         for i in range(0, 96):
 
                                             # Y coordinate (check for non-zero)
                                             coord2 = struct.unpack('<i', data_pc[bytePos + 4:bytePos + 8])[0]
-
+                                            # d1.append(coord2)
+                                            # print('1',coord2,len(d1))
                                             # timestamp
                                             timestamp_sec += 0.000004167
 
                                             if coord2:
                                                 numPts += 1
                                                 binFile.write(data_pc[bytePos:bytePos + 14])
+                                                # co=data_pc[bytePos+12:bytePos + 13]
+                                                # d1.append(co)
+                                                # print('1',struct.unpack('<i',data_pc[bytePos+10:bytePos + 14]))
                                                 binFile.write(struct.pack('<d', timestamp_sec))
+                                                # print('2',timestamp_sec)
                                             else:
                                                 nullPts += 1
 
                                             bytePos += 14
-
+                                            # lenData = len(d1)
+                                            # for i in range(0, lenData):
+                                            #     co1 = int.from_bytes(d1[i], byteorder='little')
+                                            # print('11',co1)
+                                        # print('1',d1,len(d1))
                                     # Horizon and Tele-15 Spherical (single return)
                                     elif dataType == 3:
                                         # to account for first point's timestamp being increment in the loop
@@ -1326,11 +1367,15 @@ class _dataCaptureThread(object):
                                                 nullPts += 1
 
                                             bytePos += 9
-
+                                            
+    
                             #IMU data capture
+                            # print('111',select.select[self.i_socket])
                             if select.select([self.i_socket], [], [], 0)[0]:
+                                # print(112)
                                 imu_data, addr2 = self.i_socket.recvfrom(50)
-
+                                # print(5665)
+                                # print('imu',imu_data)
                                 # version = int.from_bytes(imu_data[0:1], byteorder='little')
                                 # slot_id = int.from_bytes(imu_data[1:2], byteorder='little')
                                 # lidar_id = int.from_bytes(imu_data[2:3], byteorder='little')
@@ -1368,7 +1413,9 @@ class _dataCaptureThread(object):
                     # thread still running check (exit point)
                     else:
                         break
-
+                # imu_data, addr2 = self.i_socket.recvfrom(50)
+                # print('imu',imu_data)
+                # print(1212)
                 self.numPts = numPts
                 self.nullPts = nullPts
                 self.imu_records = imu_records
@@ -2486,7 +2533,7 @@ class openpylivox(object):
 
         if self._isConnected:
             if not self._isData:
-                self._captureStream = _dataCaptureThread(self._sensorIP, self._dataSocket, self._imuSocket, "", 2, 0, 0, 0, self._showMessages, self._format_spaces, self._deviceType)
+                self._captureStream = _dataCaptureThread(self._sensorIP, self._dataSocket, self._imuSocket, "", 0, 0, 0, 0, self._showMessages, self._format_spaces, self._deviceType)
                 time.sleep(0.12)
                 self._waitForIdle()
                 self._cmdSocket.sendto(self._CMD_DATA_START, (self._sensorIP, 65000))
@@ -3013,6 +3060,7 @@ class openpylivox(object):
 
             if OnOff:
                 self._cmdSocket.sendto(self._CMD_IMU_DATA_ON, (self._sensorIP, 65000))
+                # print('11',int.from_bytes(self._CMD_IMU_DATA_ON, byteorder='little'))
                 if self._showMessages: print("   " + self._sensorIP + self._format_spaces + "   <--     sent start IMU data push request")
             else:
                 self._cmdSocket.sendto(self._CMD_IMU_DATA_OFF, (self._sensorIP, 65000))
@@ -3410,7 +3458,7 @@ class openpylivox(object):
         stop.append(self._doneCapturing())
         for i in range(len(self._mid100_sensors)):
             stop.append(self._mid100_sensors[i]._doneCapturing())
-
+        # print('1222',all(stop))
         return all(stop)
 
 def allDoneCapturing(sensors):
@@ -3418,9 +3466,11 @@ def allDoneCapturing(sensors):
     for i in range(0, len(sensors)):
         if sensors[i]._captureStream is not None:
             stop.append(sensors[i].doneCapturing())
+            # print(sensors[i].doneCapturing())
 
     # small sleep to ensure this command isn't continuously called if in a while True loop
     time.sleep(0.01)
+    # print('1222',all(stop))
     return all(stop)
 
 

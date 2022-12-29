@@ -31,7 +31,7 @@ def singleSensorDemo():
     sensor = opl.openpylivox(True)  # optional True/False, is used to have sensor messages printed to screen (default = False)
 
     # automatically discover if any Livox Sensors are available on the network
-    # sensor.discover()
+    sensor.discover()
 
     # automatically discover if any Livox Sensors are available on the network, using a specific computer IP address
     # sensor.discover("192.168.1.23")
@@ -200,8 +200,8 @@ def multipleSensorsDemo():
         sensor = opl.openpylivox(True)
 
         # automatically find and connect to a sensor
-        connected = sensor.auto_connect("192.168.1.23")
-
+        connected = sensor.auto_connect("192.168.1.101")
+        print(connected)
         if connected:
             # initial commands for each sensor (no harm if the parameter is not supported by sensor)
             sensor.setCartesianCS()
@@ -221,7 +221,8 @@ def multipleSensorsDemo():
         # start all their data streams
         for i in range(0, len(sensors)):
             sensors[i].dataStart_RT_B()
-
+            # print(sensors[i].dataStart_RT_B())
+    #     # print('1115',sensors)
         # save data from all the sensors to individual data files, using sensor's serial # as filename
         for i in range(0, len(sensors)):
             sensors[i].showMessages(False)
@@ -230,8 +231,8 @@ def multipleSensorsDemo():
             filename = sensors[i].serialNumber() + ".bin"
             filePathAndNames.append(filename)
             sensors[i].resetShowMessages()
-
-            sensors[i].saveDataToFile(filename, 0.0, 5.0)
+        
+            sensors[i].saveDataToFile(filename, 0.0, 0.01)
 
         # simulate other operations being performed
         while True:
@@ -242,24 +243,24 @@ def multipleSensorsDemo():
             if opl.allDoneCapturing(sensors):
                 break
 
-        # stop data on all the sensors
-        for i in range(0, len(sensors)):
-            sensors[i].dataStop()
+    #     # stop data on all the sensors
+    #     for i in range(0, len(sensors)):
+    #         sensors[i].dataStop()
 
-        # spin down all the sensors
-        for i in range(0, len(sensors)):
-            sensors[i].lidarSpinDown()
+    #     # spin down all the sensors
+    #     # for i in range(0, len(sensors)):
+    #     #     sensors[i].lidarSpinDown()
+    #     print(12)
+    #     # disconnect all the sensors and convert binary data files to ASCII-based files
+    #     for i in range(0, len(sensors)):
+    #         # sensors[i].disconnect()
 
-        # disconnect all the sensors and convert binary data files to ASCII-based files
-        for i in range(0, len(sensors)):
-            sensors[i].disconnect()
-
-            # convert BINARY point data to LAS file and IMU data (if applicable) to CSV file
-            # no harm done if filePathAndName is an ASCII CSV file, the conversion will be skipped
-            opl.convertBin2LAS(filePathAndNames[i], deleteBin=True)
-
+    #         # convert BINARY point data to LAS file and IMU data (if applicable) to CSV file
+    #         # no harm done if filePathAndName is an ASCII CSV file, the conversion will be skipped
+    #         opl.convertBin2LAS(filePathAndNames[i], deleteBin=True)
+    #     print(13)
 
 if __name__ == '__main__':
 
-    singleSensorDemo()
-    # multipleSensorsDemo()
+    # singleSensorDemo()
+    multipleSensorsDemo()
